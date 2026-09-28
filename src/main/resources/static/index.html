@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Restaurant Tracker Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --input-bg: rgba(15, 23, 42, 0.6);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      
+      --accent: #f97316;
+      --accent-hover: #ea580c;
+      --accent-glow: rgba(249, 115, 22, 0.25);
+      
+      --ok: #10b981;
+      --ok-bg: rgba(16, 185, 129, 0.15);
+      --warn: #f59e0b;
+      --warn-bg: rgba(245, 158, 11, 0.15);
+      --bad: #ef4444;
+      --bad-bg: rgba(239, 68, 68, 0.15);
+      --info: #3b82f6;
+      --info-bg: rgba(59, 130, 246, 0.15);
+      
+      --radius: 12px;
+      --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f8fafc;
+        --card-bg: #ffffff;
+        --card-border: #e2e8f0;
+        --input-bg: #f1f5f9;
+        --text-main: #0f172a;
+        --text-muted: #64748b;
+      }
+    }
+
+    * { box-sizing: border-box; }
+    
+    body {
+      margin: 0;
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* Header Styling */
+    header {
+      padding: 18px 32px;
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    header h1::before {
+      content: '';
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      background: var(--accent);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--accent);
+    }
+
+    /* Notification Toast */
+    #msg {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 100;
+      padding: 12px 20px;
+      border-radius: var(--radius);
+      color: #fff;
+      font-weight: 600;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+      display: none;
+      animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* Grid Layout */
+    main {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 20px;
+      padding: 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* Section Component (Card) */
+    section {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .col-4 { grid-column: span 4; }
+    .col-8 { grid-column: span 8; }
+    .col-12 { grid-column: span 12; }
+
+    @media (max-width: 1024px) {
+      .col-4, .col-8 { grid-column: span 12; }
+    }
+
+    h2 {
+      margin: 0 0 16px 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Form Controls */
+    form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+      min-width: 120px;
+    }
+
+    label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    input, select, textarea {
+      font-family: inherit;
+      font-size: 13px;
+      padding: 10px 12px;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      background: var(--input-bg);
+      color: var(--text-main);
+      outline: none;
+      transition: var(--transition);
+      width: 100%;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    /* Buttons */
+    button {
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: none;
+      background: var(--accent);
+      color: #ffffff;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    button:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button.s {
+      padding: 5px 10px;
+      font-size: 12px;
+      border-radius: 6px;
+    }
+
+    button.secondary {
+      background: transparent;
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+    }
+
+    button.secondary:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--text-muted);
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+      margin-top: 6px;
+    }
+
+    /* Table Component */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 13px;
+    }
+
+    th {
+      text-align: left;
+      padding: 10px 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    td {
+      padding: 12px;
+      border-bottom: 1px solid var(--card-border);
+      vertical-align: middle;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Badges */
+    .tag {
+      padding: 4px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      display: inline-block;
+      text-transform: uppercase;
+    }
+
+    .tag.FREE, .tag.COMPLETED, .tag.BILLED, .tag.PAID, .tag.SERVED {
+      background: var(--ok-bg);
+      color: var(--ok);
+    }
+
+    .tag.OCCUPIED, .tag.SEATED, .tag.PLACED {
+      background: var(--warn-bg);
+      color: var(--warn);
+    }
+
+    .tag.PREPARING, .tag.READY, .tag.CONFIRMED {
+      background: var(--info-bg);
+      color: var(--info);
+    }
+
+    .tag.CANCELLED {
+      background: var(--bad-bg);
+      color: var(--bad);
+    }
+
+    /* Bill Display */
+    #bill {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      background: var(--input-bg);
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px dashed var(--card-border);
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--text-main);
+      height: 100%;
+      box-sizing: border-box;
+    }
+
+    small {
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .hint-text {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Restaurant Tracker</h1>
+</header>
+
+<div id="msg"></div>
+
+<main>
+  <!-- 1. Tables Section -->
+  <section class="col-4">
+    <h2>1. Tables Setup</h2>
+    <form id="tf">
+      <div class="form-group">
+        <label>Table No.</label>
+        <input name="tableNumber" placeholder="T1" required>
+      </div>
+      <div class="form-group">
+        <label>Capacity</label>
+        <input name="capacity" type="number" min="1" placeholder="4" required>
+      </div>
+      <div class="form-group" style="justify-content: flex-end;">
+        <button>Add Table</button>
+      </div>
+    </form>
+    <div class="table-responsive">
+      <table id="tables"></table>
+    </div>
+  </section>
+
+  <!-- 2. Reserve / Walk-in Section -->
+  <section class="col-8">
+    <h2>2. Reserve / Walk-in</h2>
+    <form id="rf">
+      <div class="form-group">
+        <label>Table</label>
+        <select name="tableId" id="rtable" required></select>
+      </div>
+      <div class="form-group">
+        <label>Customer Name</label>
+        <input name="customerName" placeholder="John Doe" required>
+      </div>
+      <div class="form-group">
+        <label>Phone Number</label>
+        <input name="phone" placeholder="10 digits" required>
+      </div>
+      <div class="form-group">
+        <label>Party Size</label>
+        <input name="partySize" type="number" min="1" placeholder="2" required>
+      </div>
+      <div class="form-group">
+        <label>Date</label>
+        <input name="reservationDate" type="date">
+      </div>
+      <div class="form-group">
+        <label>Start Time</label>
+        <input name="startTime" type="time">
+      </div>
+      <div class="form-group">
+        <label>End Time</label>
+        <input name="endTime" type="time">
+      </div>
+      <div class="btn-group">
+        <button type="submit">Reserve</button>
+        <button type="button" class="secondary" onclick="walkIn()">Walk-in (Seat Now)</button>
+      </div>
+    </form>
+    <span class="hint-text">* Reservations require Date, Start, and End time. Walk-ins seat immediately.</span>
+  </section>
+
+  <!-- 3. Reservations List Section -->
+  <section class="col-12">
+    <h2>3. Reservation Overview</h2>
+    <div class="table-responsive">
+      <table id="reservations"></table>
+    </div>
+  </section>
+
+  <!-- 4. Order Creation -->
+  <section class="col-4">
+    <h2>4. Place Order</h2>
+    <div class="form-group" style="margin-bottom: 12px;">
+      <label>Target Table</label>
+      <select id="otable"></select>
+    </div>
+    <div class="form-group" style="margin-bottom: 12px;">
+      <label>Order Items</label>
+      <textarea id="items">Pizza,2,150
+Coffee,2,30
+Sandwich,1,80</textarea>
+      <span class="hint-text">Format per line: <b>Name, Quantity, Unit Price</b></span>
+    </div>
+    <button onclick="placeOrder()" style="width: 100%;">Submit Order</button>
+  </section>
+
+  <!-- Bill Preview -->
+  <section class="col-8">
+    <h2>Active Bill View</h2>
+    <pre id="bill"><small>Select "View Bill" or "Generate Bill" from the Orders section below to inspect details.</small></pre>
+  </section>
+
+  <!-- 5. Orders List Section -->
+  <section class="col-12">
+    <h2>5. Active Orders</h2>
+    <div class="table-responsive">
+      <table id="orders"></table>
+    </div>
+  </section>
+</main>
+
+<script>
+const $=s=>document.querySelector(s), NEXT={PLACED:'PREPARING',PREPARING:'READY',READY:'SERVED'};
+
+function toast(t,ok=true){
+  const m=$('#msg');
+  m.textContent=t;
+  m.style.background=ok?'var(--ok)':'var(--bad)';
+  m.style.display='block';
+  clearTimeout(toast.t);
+  toast.t=setTimeout(()=>m.style.display='none',4500);
+}
+
+async function api(path,method='GET',body){
+ const r=await fetch('/api'+path,{method,headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
+ const txt=await r.text(),d=txt?JSON.parse(txt):null;
+ if(!r.ok)throw new Error((d&&d.message||'Error')+(d&&d.fieldErrors?' '+JSON.stringify(d.fieldErrors):''));return d}
+
+async function run(fn,ok){try{const x=await fn();if(ok)toast(ok);await load();return x}catch(e){toast(e.message,false)}}
+
+const tag=s=>`<span class="tag ${s}">${s}</span>`;
+
+async function load(){
+ const [t,r,o]=await Promise.all([api('/tables'),api('/reservations'),api('/orders')]);
+ 
+ $('#tables').innerHTML='<thead><tr><th>ID</th><th>No.</th><th>Cap.</th><th>Status</th><th>Action</th></tr></thead><tbody>'+
+  t.map(x=>`<tr><td><b>${x.id}</b></td><td>${x.tableNumber}</td><td>${x.capacity}</td><td>${tag(x.status)}</td><td><button class="s secondary" onclick="delTable(${x.id})">Delete</button></td></tr>`).join('')+'</tbody>';
+ 
+ const opts=t.map(x=>`<option value="${x.id}">${x.tableNumber} (cap ${x.capacity}, ${x.status})</option>`).join('');
+ $('#rtable').innerHTML=opts;
+ $('#otable').innerHTML=opts;
+ 
+ $('#reservations').innerHTML='<thead><tr><th>ID</th><th>Customer</th><th>Table</th><th>Date</th><th>Time</th><th>Party</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+
+  r.map(x=>`<tr><td><b>${x.id}</b></td><td><b>${x.customerName}</b><br><small>${x.phone}</small></td><td>${x.tableNumber}</td><td>${x.reservationDate}</td><td>${x.startTime.slice(0,5)} - ${x.endTime.slice(0,5)}</td><td>${x.partySize}</td><td>${tag(x.status)}</td><td>${x.status=='CONFIRMED'?`<button class="s" onclick="resStatus(${x.id},'SEATED')">Seat</button> <button class="s secondary" onclick="cancelRes(${x.id})">Cancel</button>`:''}</td></tr>`).join('')+'</tbody>';
+ 
+ $('#orders').innerHTML='<thead><tr><th>ID</th><th>Table</th><th>Items</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+
+  o.map(x=>`<tr><td><b>${x.id}</b></td><td>${x.tableNumber}</td><td>${x.items.map(i=>`• ${i.itemName} <small>×${i.quantity}</small> @₹${i.unitPrice}`).join('<br>')}</td><td>${tag(x.status)}</td><td>${NEXT[x.status]?`<button class="s" onclick="ordStatus(${x.id},'${NEXT[x.status]}')">→ ${NEXT[x.status]}</button> `:''}${x.status=='BILLED'?`<button class="s secondary" onclick="showBill(${x.id})">View Bill</button>`:`<button class="s" onclick="genBill(${x.id})">Generate Bill</button>`}</td></tr>`).join('')+'</tbody>';
+}
+
+$('#tf').onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);run(()=>api('/tables','POST',{tableNumber:f.get('tableNumber'),capacity:+f.get('capacity')}),'Table added');e.target.reset()};
+
+$('#rf').onsubmit=e=>{e.preventDefault();const f=Object.fromEntries(new FormData(e.target));
+ run(()=>api('/reservations','POST',{...f,tableId:+f.tableId,partySize:+f.partySize}),'Reservation created')};
+
+function walkIn(){const f=Object.fromEntries(new FormData($('#rf')));run(()=>api('/reservations/walk-in','POST',{customerName:f.customerName,phone:f.phone,partySize:+f.partySize,tableId:+f.tableId}),'Walk-in seated')}
+
+const delTable=id=>run(()=>api('/tables/'+id,'DELETE'),'Table deleted');
+const resStatus=(id,s)=>run(()=>api(`/reservations/${id}/status`,'PUT',{status:s}),'Customer seated');
+const cancelRes=id=>run(()=>api('/reservations/'+id,'DELETE'),'Reservation cancelled');
+const ordStatus=(id,s)=>run(()=>api(`/orders/${id}/status`,'PUT',{status:s}),'Order '+s);
+
+function placeOrder(){
+  const items=$('#items').value.split('\n').filter(l=>l.trim()).map(l=>{const [n,q,p]=l.split(',');return{itemName:n.trim(),quantity:+q,unitPrice:+p}});
+  run(()=>api('/orders','POST',{tableId:+$('#otable').value,items}),'Order placed');
+}
+
+function drawBill(b){
+  $('#bill').textContent=`========================================\n`+
+  `BILL #${b.billId}  (Order #${b.orderId}, Table ${b.tableNumber})\n`+
+  `========================================\n\n`+
+  b.items.map(i=>`${i.itemName.padEnd(16)} x${i.quantity} @ ₹${i.unitPrice}`.padEnd(30) + `₹${i.lineTotal}`).join('\n')+
+  `\n----------------------------------------\n`+
+  `Subtotal: `.padEnd(30) + `₹${b.subtotal}\n`+
+  `Tax:      `.padEnd(30) + `₹${b.tax}\n`+
+  `========================================\n`+
+  `TOTAL:    `.padEnd(30) + `₹${b.total}\n`+
+  `========================================\n`+
+  `Status: ${b.paymentStatus} | Date: ${b.billedAt}`;
+}
+
+async function genBill(id){const b=await run(()=>api('/bills/order/'+id,'POST'),'Bill generated - table is now FREE');if(b)drawBill(b)}
+async function showBill(id){try{drawBill(await api(`/orders/${id}/bill`))}catch(e){toast(e.message,false)}}
+
+load().catch(e=>toast('Cannot reach backend: '+e.message,false));
+</script>
+</body>
+</html>
